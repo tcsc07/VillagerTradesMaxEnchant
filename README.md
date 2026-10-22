@@ -2,7 +2,7 @@
 
 Enchanted books, weapons, armor and tools sold by villagers are **always generated at their maximum enchantment level**, and zombie villager cure time is shortened to a configurable number of seconds (5 by default).
 
-Currently supports **Minecraft 26.2 / 26.3** (Fabric); support for older versions will follow.
+Currently supports **Minecraft 26.2 / 26.3** (Fabric); older versions are in the pipeline, with 26.1 and 1.21 up next.
 
 > 中文说明见 [README.zh-CN.md](README.zh-CN.md)。
 
@@ -22,7 +22,7 @@ Currently supports **Minecraft 26.2 / 26.3** (Fabric); support for older version
 
 The villager trading system still builds on the 1.14 overhaul.
 
-26.x reworked villager trades and enchanting. Compared with 1.21, a 1.21-era implementation **fails silently** on 26.x — no crash, no error, the enchantments are simply still random.
+26.x reworked villager trades and enchanting. Compared with 1.21, a 1.21-era implementation **fails silently** on 26.x — it does not crash and does not log an error, the enchantments are simply still random.
 
 The notes below are the most reusable part of this repository for anyone porting a villager-trade or enchanting mod to 26.x.
 
@@ -33,7 +33,7 @@ The notes below are the most reusable part of this repository for anyone porting
 | 1.21 – 1.21.11 | Hardcoded inner classes `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`, each implementing `getOffer(...)`                                                                                           | `EnchantmentHelper.createBook(...)` / `enchantItem(...)` called directly inside `getOffer`                                      |
 | 26.2 / 26.3    | Inner classes **are gone entirely**. Trades are data-driven: `net.minecraft.world.item.trading.VillagerTrade` holds a `List<LootItemFunction> givenItemModifiers` and applies them in order inside `getOffer(LootContext)` | **Back to loot functions**: enchanted books use `EnchantRandomlyFunction`, enchanted equipment uses `EnchantWithLevelsFunction` |
 
-> The package moved too: `VillagerTrades` went from `net.minecraft.world.entity.npc[.villager]` to `net.minecraft.world.item.trading`.
+> The path moved too: `VillagerTrades` went from `net.minecraft.world.entity.npc[.villager]` to `net.minecraft.world.item.trading`.
 
 **Therefore**: on 1.21 you must mixin `getOffer` (loot functions never run for villager trades); on 26.x it is the opposite — mixin the loot functions and you are done.
 
@@ -119,7 +119,7 @@ Other environment requirements:
                 -Pcloth_config_version=26.3.159
 ```
 
-After building: `build/libs/max-level-enchanting-1.0.0.jar`
+After building you get: `build/libs/max-level-enchanting-1.0.0.jar`
 
 Both versions share a single source tree: `EnchantRandomlyFunction`, `EnchantWithLevelsFunction` and `VillagerTrade#getOffer` have identical signatures in 26.2 and 26.3.
 
@@ -133,7 +133,7 @@ Both versions share a single source tree: `EnchantRandomlyFunction`, `EnchantWit
 > Cloth Config and Mod Menu are compile-time only (`modCompileOnly` / `compileOnly`); players supply them at runtime. To build offline against local jars:  
 > `./gradlew build -Pcloth_config_local=/path/to/cloth-config.jar -Pmodmenu_local=/path/to/modmenu.jar`
 
-The mod declares `minecraft` as `~26.2` / `~26.3`, so a single jar works across both patch lines. Override it with `-Pmc_dep_range="~26.2"`.
+The mod currently declares `minecraft` as `~26.2` / `~26.3`, but one jar works across the 26.x patch line — unless a future 26.x release reworks trades again. Override it with `-Pmc_dep_range="~26.x"`.
 
 ---
 

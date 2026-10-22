@@ -2,7 +2,7 @@
 
 村民交易的附魔书 / 武器 / 装备 / 工具**始终为最高附魔等级**，并把僵尸村民的治愈倒计时缩短到可配置的秒数（默认 5 秒）。
 
-当前支持 **Minecraft 26.2 / 26.3**（Fabric），后续会向下更新。
+当前支持 **Minecraft 26.2 / 26.3**（Fabric），后续会向下更新，下一个计划是 26.1 和 1.21 的版本。
 
 > English documentation: [README.md](README.md)。
 
@@ -22,7 +22,7 @@
 
 村民交易系统的底层框架仍沿用 1.14 的大更新。
 
-26.x 对村民交易与附魔做了重构，与 1.21 相比，1.21 的写法在 26.x 上**会静默失效**——不崩溃、不报错，但附魔依然是随机的。
+26.x 对村民交易与附魔做了重构，与 1.21 相比，1.21 的写法在 26.x 上**会静默失效**——不崩溃也不报错，附魔依然是随机的。
 
 ### 1. 村民交易改回"数据驱动 + loot function"路径
 
@@ -31,7 +31,7 @@
 | 1.21 ~ 1.21.11 | 硬编码内部类 `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`，各自实现 `getOffer(...)`                                                        | 直接在 `getOffer` 里调 `EnchantmentHelper.createBook(...)` / `enchantItem(...)`              |
 | 26.2 / 26.3    | 内部类**全部消失**，改用数据驱动：`net.minecraft.world.item.trading.VillagerTrade` 持有 `List<LootItemFunction> givenItemModifiers`，在 `getOffer(LootContext)` 里依次 `apply` | **重新回到 loot function**：附魔书走 `EnchantRandomlyFunction`，附魔装备走 `EnchantWithLevelsFunction` |
 
-> 包路径也变了：`VillagerTrades` 从 `net.minecraft.world.entity.npc[.villager]` 移到了 `net.minecraft.world.item.trading`。
+> 路径也变了：`VillagerTrades` 从 `net.minecraft.world.entity.npc[.villager]` 移到了 `net.minecraft.world.item.trading`。
 
 **因此**：在 1.21 上必须 mixin `getOffer`（因为 loot function 根本不参与村民交易）；在 26.x 上反过来——mixin loot function 就够了。
 
@@ -117,7 +117,7 @@ tiny	2	0	official	named
                 -Pcloth_config_version=26.3.159
 ```
 
-编译后：`build/libs/max-level-enchanting-1.0.0.jar`
+编译后得：`build/libs/max-level-enchanting-1.0.0.jar`
 
 两个版本共用同一套源码：26.2 与 26.3 的 `EnchantRandomlyFunction` / `EnchantWithLevelsFunction` / `VillagerTrade#getOffer` 签名完全一致。
 
@@ -131,7 +131,7 @@ tiny	2	0	official	named
 > Cloth Config 与 Mod Menu 只在编译期需要（`modCompileOnly` / `compileOnly`），运行期由玩家自行安装。若想用本地 jar 离线构建：  
 > `./gradlew build -Pcloth_config_local=/path/to/cloth-config.jar -Pmodmenu_local=/path/to/modmenu.jar`
 
-该 mod 会声明对 `minecraft` 的依赖范围为 `~26.2` / `~26.3`，因此同一份 jar 可在两代小版本之间通用。如需手动覆盖：`-Pmc_dep_range="~26.2"`。
+目前该 mod `minecraft` 的依赖范围为 `~26.2` / `~26.3`，但同一份 jar 可在 26.x 的小版本之间通用，除非 26.x 的某个版本又开始改动交易。如需手动覆盖：`-Pmc_dep_range="~26.x"`。
 
 ---
 
