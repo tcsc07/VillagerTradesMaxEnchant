@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "max-level-enchanting",
+	"version": "${version}",
+	"name": "Villager trades max-level enchanting",
+	"description": "村民交易的附魔书、武器、装备、工具的附魔始终为最高级，并且将僵尸村民治愈时长变为5秒。",
+	"authors": [
+		"max-level-enchanting contributors"
+	],
+	"license": "MIT",
+	"icon": "assets/max-level-enchanting/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"server": [
+			"com.example.maxenchant.ServerCommands"
+		],
+		"client": [
+			"com.example.maxenchant.MaxEnchantClient"
+		],
+		"modmenu": [
+			"com.example.maxenchant.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"max-level-enchanting.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"fabric-api": "${fabricapi_min}",
+		"minecraft": "${mcversion}",
+		"cloth-config": ">=26.0.0",
+		"java": "${java}"
+	}
+}

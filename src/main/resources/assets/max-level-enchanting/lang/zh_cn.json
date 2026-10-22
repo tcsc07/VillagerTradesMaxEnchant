@@ -1,0 +1,20 @@
+{
+	"modmenu.nameTranslation.max-level-enchanting": "村民交易满级附魔",
+	"modmenu.descriptionTranslation.max-level-enchanting": "村民交易的附魔书、武器、装备、工具的附魔始终为最高级，并且将僵尸村民治愈时长变为5秒。",
+
+	"text.autoconfig.max-level-enchanting.title": "村民交易满级附魔",
+	"text.autoconfig.max-level-enchanting": "村民交易满级附魔",
+	"text.autoconfig.max-level-enchanting.category.default": "常规",
+
+	"text.autoconfig.max-level-enchanting.option.maxEnchantEnabled": "满级附魔",
+	"text.autoconfig.max-level-enchanting.option.maxEnchantEnabled.@Tooltip": "开启后，村民交易的附魔书、武器、装备、工具、弓/弩等一律以最高附魔等级生成；\n关闭后恢复原版的随机附魔等级。",
+
+	"text.autoconfig.max-level-enchanting.option.cureEnabled": "治愈加速",
+	"text.autoconfig.max-level-enchanting.option.cureEnabled.@Tooltip": "开启后，被僵尸感染的村民在服用金苹果+虚弱药水后，\n治愈(转化回村民)的倒计时会缩短到下方设定的秒数。",
+
+	"text.autoconfig.max-level-enchanting.option.cureSeconds": "治愈秒数",
+	"text.autoconfig.max-level-enchanting.option.cureSeconds.@Tooltip": "僵尸村民治愈倒计时的秒数（tick = 秒数 × 20）。\n设为 0 或更小的数则关闭该特性，保持原版治愈时长。",
+
+	"text.autoconfig.max-level-enchanting.option.vanillaOnly": "隔离模式（仅原版）",
+	"text.autoconfig.max-level-enchanting.option.vanillaOnly.@Tooltip": "开启后，只有原版（minecraft 命名空间）的附魔会被顶到最高级；\n第三方 mod 添加的自定义附魔保持原等级。"
+}

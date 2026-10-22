@@ -1,0 +1,20 @@
+{
+	"modmenu.nameTranslation.max-level-enchanting": "Villager trades max-level enchanting",
+	"modmenu.descriptionTranslation.max-level-enchanting": "Enchantments on villagers' traded enchanted books, weapons, armor and tools are always max-level, and zombie villager cure time is reduced to 5 seconds.",
+
+	"text.autoconfig.max-level-enchanting.title": "Villager trades max-level enchanting",
+	"text.autoconfig.max-level-enchanting": "Villager trades max-level enchanting",
+	"text.autoconfig.max-level-enchanting.category.default": "General",
+
+	"text.autoconfig.max-level-enchanting.option.maxEnchantEnabled": "Max Enchant",
+	"text.autoconfig.max-level-enchanting.option.maxEnchantEnabled.@Tooltip": "When enabled, enchanted books, weapons, armor, tools and bows/crossbows sold by villagers are always generated at the highest enchantment level.\nDisable to restore vanilla random enchantment levels.",
+
+	"text.autoconfig.max-level-enchanting.option.cureEnabled": "Cure Speed-up",
+	"text.autoconfig.max-level-enchanting.option.cureEnabled.@Tooltip": "When enabled, after a zombie villager eats a golden apple with weakness applied,\nits cure (conversion back to villager) countdown is shortened to the seconds configured below.",
+
+	"text.autoconfig.max-level-enchanting.option.cureSeconds": "Cure Seconds",
+	"text.autoconfig.max-level-enchanting.option.cureSeconds.@Tooltip": "The zombie villager cure countdown in seconds (ticks = seconds × 20).\nSet to 0 or lower to disable and keep the vanilla cure duration.",
+
+	"text.autoconfig.max-level-enchanting.option.vanillaOnly": "Vanilla Only",
+	"text.autoconfig.max-level-enchanting.option.vanillaOnly.@Tooltip": "When enabled, only vanilla (minecraft namespace) enchantments are raised to max level.\nCustom enchantments added by other mods keep their original level."
+}

@@ -1,0 +1,121 @@
+// 面向 Minecraft 26.2 / 26.3 的 Fabric mod 构建脚本。
+//
+// 两个版本共用同一套源码：26.2 与 26.3 的
+//   EnchantRandomlyFunction / EnchantWithLevelsFunction / VillagerTrade#getOffer
+// 签名完全一致，差异只在 Loom 与 Gradle 版本要求上。
+//
+// 切换目标版本：
+//   ./gradlew build -Pminecraft_version=26.3 -Dloom_version=1.19.1
+//
+// Loom 用系统属性 -Dloom_version 指定（buildscript 阶段即可读取，
+// 而 plugins {} 块不支持动态版本，故采用 buildscript + apply 风格）。
+buildscript {
+	repositories {
+		maven { url = 'https://maven.fabricmc.net/' }
+		mavenCentral()
+	}
+	dependencies {
+		def loomVer = System.getProperty('loom_version') ?: '1.19.1'
+		classpath "net.fabricmc:fabric-loom:${loomVer}"
+	}
+}
+apply plugin: 'fabric-loom'
+apply plugin: 'maven-publish'
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	maven { url = 'https://maven.fabricmc.net/' }
+	maven { url = 'https://maven.shedaniel.me/' }
+	maven { url = 'https://maven.terraformersmc.com/releases/' }
+	mavenCentral()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	// 26.x 客户端 jar 本身即非混淆（类名/方法名就是官方命名），Mojang 也不再随
+	// version json 提供 client_mappings（没有 downloads.client_mappings 字段），
+	// 因此 officialMojangMappings() 会报 "Failed to find official mojang mappings"。
+	//
+	// 解法：给 layered mappings 塞一个「恒等」层 —— gradle/identity.tiny 是一个
+	// 只有命名空间声明、没有任何类/方法条目的 Tiny v2 头，声明
+	//   official -> named
+	// 配合 noIntermediateMappings()（不拉 intermediary、不做中间名重映射），
+	// 效果就是 official、intermediary、named 三个命名空间下名字完全一致，
+	// 编译与 mixin 都直接使用 26.x 的官方类名/方法名。
+	loom.noIntermediateMappings()
+	mappings loom.layered {
+		mappings(file("gradle/identity.tiny"))
+	}
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// Cloth Config：配置界面依赖。
+	if (project.hasProperty("cloth_config_local")) {
+		modCompileOnly files(project.cloth_config_local)
+	} else {
+		modImplementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
+	}
+	// Mod Menu：编译期可选，运行期未装也不影响。
+	if (project.hasProperty("modmenu_local")) {
+		modCompileOnly files(project.modmenu_local)
+	} else {
+		compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+	}
+}
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft_version
+	inputs.property "java", project.java_version
+	inputs.property "fabricapi_min", project.findProperty("fabricapi_min") ?: ">=0.145.0"
+
+	// minecraft 与 java 的依赖约束用范围而不是等值：
+	//   - minecraft "~26.2" → 允许 26.2.x / 26.3.x（同一大版本线，API 一致）
+	//   - java ">=25"       → 26.x 要求 Java 25 及以上
+	def mcRange = project.findProperty("mc_dep_range") ?: "~${project.minecraft_version}"
+	def javaRange = project.findProperty("java_dep_range") ?: ">=${project.java_version}"
+	inputs.property "mcdeprange", mcRange
+	inputs.property "javadeprange", javaRange
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version,
+		       "mcversion": inputs.properties.mcdeprange,
+		       "java": inputs.properties.javadeprange,
+		       "fabricapi_min": inputs.properties.fabricapi_min
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = project.java_version as int
+	it.options.encoding = "UTF-8"
+}
+
+java {
+	// 不开 withSourcesJar()：它会让 Gradle 额外拉取全部依赖的 *-sources.jar，
+	// 在慢速网络下是纯粹的等待。发布到 GitHub 时源码本身就在仓库里，不需要。
+	sourceCompatibility = JavaVersion.toVersion(project.java_version as int)
+	targetCompatibility = JavaVersion.toVersion(project.java_version as int)
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${project.base.archivesName.get()}" }
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+	repositories {
+	}
+}
