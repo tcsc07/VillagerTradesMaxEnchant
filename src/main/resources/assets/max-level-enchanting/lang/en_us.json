@@ -1,5 +1,5 @@
 {
-	"modmenu.nameTranslation.max-level-enchanting": "Villager trades max-level enchanting",
+	"modmenu.nameTranslation.max-level-enchanting": "VillagerTradesMaxEnchant",
 	"modmenu.descriptionTranslation.max-level-enchanting": "Enchantments on villagers' traded enchanted books, weapons, armor and tools are always max-level, and zombie villager cure time is reduced to 5 seconds.",
 
 	"text.autoconfig.max-level-enchanting.title": "Villager trades max-level enchanting",

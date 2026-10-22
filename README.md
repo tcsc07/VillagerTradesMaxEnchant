@@ -1,4 +1,6 @@
-# Villager Trades Max-Level Enchanting
+# VillagerTradesMaxEnchant
+
+> Villager trades max-level enchanting
 
 Enchanted books, weapons, armor and tools sold by villagers are **always generated at their maximum enchantment level**, and zombie villager cure time is shortened to a configurable number of seconds (5 by default).
 
@@ -119,7 +121,7 @@ Other environment requirements:
                 -Pcloth_config_version=26.3.159
 ```
 
-After building you get: `build/libs/max-level-enchanting-1.0.0.jar`
+After building you get: `build/libs/VillagerTradesMaxEnchant-1.0.0.jar`
 
 Both versions share a single source tree: `EnchantRandomlyFunction`, `EnchantWithLevelsFunction` and `VillagerTrade#getOffer` have identical signatures in 26.2 and 26.3.
 
@@ -140,7 +142,7 @@ The mod currently declares `minecraft` as `~26.2` / `~26.3`, but one jar works a
 ## Installation
 
 1. Install Fabric Loader (**0.19.5 or newer**) and a **Java 25** runtime
-2. Drop `max-level-enchanting-<ver>.jar` into `mods/`
+2. Drop `VillagerTradesMaxEnchant-v1.0.0-<MC>.jar` into `mods/`
 3. Also install:
    - [Fabric API](https://modrinth.com/mod/fabric-api) (required)
    - [Cloth Config API](https://modrinth.com/mod/cloth-config) (required, for the config screen)
@@ -154,7 +156,7 @@ The mod currently declares `minecraft` as `~26.2` / `~26.3`, but one jar works a
 
 ### GUI
 
-Mod Menu → "Villager trades max-level enchanting" → Config. Options:
+Mod Menu → "VillagerTradesMaxEnchant" → Config. Options:
 
 - Max Enchant (on/off)
 - Cure Speed-up (on/off)

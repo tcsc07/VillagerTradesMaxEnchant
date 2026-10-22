@@ -52,7 +52,7 @@ public class ModMenuIntegration implements ModMenuApi {
 
 		ConfigBuilder builder = ConfigBuilder.create()
 			.setParentScreen(parent)
-			.setTitle(t("村民交易满级附魔", "Villager trades max-level enchanting"))
+			.setTitle(t("VillagerTradesMaxEnchant", "VillagerTradesMaxEnchant"))
 			.setSavingRunnable(() -> AutoConfig.getConfigHolder(ModConfig.class).save());
 
 		ConfigEntryBuilder entry = builder.entryBuilder();

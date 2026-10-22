@@ -1,4 +1,6 @@
-# 村民交易满级附魔
+# VillagerTradesMaxEnchant
+
+> 村民交易满级附魔
 
 村民交易的附魔书 / 武器 / 装备 / 工具**始终为最高附魔等级**，并把僵尸村民的治愈倒计时缩短到可配置的秒数（默认 5 秒）。
 
@@ -117,7 +119,7 @@ tiny	2	0	official	named
                 -Pcloth_config_version=26.3.159
 ```
 
-编译后得：`build/libs/max-level-enchanting-1.0.0.jar`
+编译后得：`build/libs/VillagerTradesMaxEnchant-1.0.0.jar`
 
 两个版本共用同一套源码：26.2 与 26.3 的 `EnchantRandomlyFunction` / `EnchantWithLevelsFunction` / `VillagerTrade#getOffer` 签名完全一致。
 
@@ -138,7 +140,7 @@ tiny	2	0	official	named
 ## 安装
 
 1. 安装 Fabric Loader（**0.19.5 或更高**）与 **Java 25** 运行时
-2. 把 `max-level-enchanting-<ver>.jar` 放进 `mods/`
+2. 把 `VillagerTradesMaxEnchant-v1.0.0-<MC>.jar` 放进 `mods/`
 3. 一并安装：
    - [Fabric API](https://modrinth.com/mod/fabric-api)（必需）
    - [Cloth Config API](https://modrinth.com/mod/cloth-config)（必需，配置界面）
@@ -152,7 +154,7 @@ tiny	2	0	official	named
 
 ### 图形界面
 
-通过 Mod Menu → 「村民交易满级附魔」→ 配置。选项：
+通过 Mod Menu → 「VillagerTradesMaxEnchant」→ 配置。选项：
 
 - 满级附魔（开/关）
 - 治愈加速（开/关）
