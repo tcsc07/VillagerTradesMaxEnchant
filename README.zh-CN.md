@@ -10,43 +10,45 @@
 
 ## 功能
 
-| 功能 | 说明 | 默认 |
-|---|---|---|
-| 满级附魔 | 村民售卖的附魔书、剑/斧/镐/锹/锄、盔甲、弓/弩/三叉戟/钓鱼竿等，其附魔一律为各自最高等级 | 开 |
-| 治愈加速 | 被僵尸感染的村民，在喂金苹果 + 虚弱药水后，转化回村民的倒计时压缩到指定秒数 | 开（5 秒） |
-| 隔离模式 | 只对 `minecraft:` 命名空间的原版附魔顶满级，第三方 mod 的自定义附魔保持原等级 | 关 |
+| 功能   | 说明                                               | 默认     |
+| ---- | ------------------------------------------------ | ------ |
+| 满级附魔 | 村民售卖的附魔书、剑/斧/镐/锹/锄、盔甲、弓/弩/三叉戟/钓鱼竿等，其附魔一律为各自最高等级  | 开      |
+| 治愈加速 | 被僵尸感染的村民，在喂金苹果 + 虚弱药水后，转化回村民的倒计时压缩到指定秒数          | 开（5 秒） |
+| 隔离模式 | 只对 `minecraft:` 命名空间的原版附魔顶满级，第三方 mod 的自定义附魔保持原等级 | 关      |
 
 ---
 
 ## 各版本村民交易附魔的差异
 
-村民交易系统的底层框架仍沿用 1.14 的大更新。26.x 对村民交易与附魔做了大幅重构，与 1.21 相比，1.21 时代的写法在 26.x 上**会静默失效**——不崩溃、不报错，但附魔依然是随机的。
+村民交易系统的底层框架仍沿用 1.14 的大更新。
+
+26.x 对村民交易与附魔做了重构，与 1.21 相比，1.21 的写法在 26.x 上**会静默失效**——不崩溃、不报错，但附魔依然是随机的。
 
 ### 1. 村民交易改回"数据驱动 + loot function"路径
 
-| 版本 | 交易实现 | 附魔从哪来 |
-|---|---|---|
-| 1.21 ~ 1.21.11 | 硬编码内部类 `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`，各自实现 `getOffer(...)` | 直接在 `getOffer` 里调 `EnchantmentHelper.createBook(...)` / `enchantItem(...)` |
-| 26.2 / 26.3 | 内部类**全部消失**，改用数据驱动：`net.minecraft.world.item.trading.VillagerTrade` 持有 `List<LootItemFunction> givenItemModifiers`，在 `getOffer(LootContext)` 里依次 `apply` | **重新回到 loot function**：附魔书走 `EnchantRandomlyFunction`，附魔装备走 `EnchantWithLevelsFunction` |
+| 版本             | 交易实现                                                                                                                                                     | 附魔从哪来                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 1.21 ~ 1.21.11 | 硬编码内部类 `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`，各自实现 `getOffer(...)`                                                        | 直接在 `getOffer` 里调 `EnchantmentHelper.createBook(...)` / `enchantItem(...)`              |
+| 26.2 / 26.3    | 内部类**全部消失**，改用数据驱动：`net.minecraft.world.item.trading.VillagerTrade` 持有 `List<LootItemFunction> givenItemModifiers`，在 `getOffer(LootContext)` 里依次 `apply` | **重新回到 loot function**：附魔书走 `EnchantRandomlyFunction`，附魔装备走 `EnchantWithLevelsFunction` |
 
 > 包路径也变了：`VillagerTrades` 从 `net.minecraft.world.entity.npc[.villager]` 移到了 `net.minecraft.world.item.trading`。
 
-**结论**：在 1.21 上必须 mixin `getOffer`（因为 loot function 根本不参与村民交易）；在 26.x 上反过来——mixin loot function 就够了。
+**因此**：在 1.21 上必须 mixin `getOffer`（因为 loot function 根本不参与村民交易）；在 26.x 上反过来——mixin loot function 就够了。
 
 ### 2. `EnchantRandomlyFunction#enchantItem` 从 static 变成实例方法
 
-| 版本 | 签名 | Mixin 回调修饰符 |
-|---|---|---|
-| 1.21 全系 | `private static ItemStack enchantItem(ItemStack, Holder<Enchantment>)` | 必须 `static` |
-| 26.x | `private ItemStack enchantItem(ItemStack, Holder<Enchantment>, LootContext)` | **不能** `static` |
+| 版本      | 签名                                                                           | Mixin 回调修饰符     |
+| ------- | ---------------------------------------------------------------------------- | --------------- |
+| 1.21 全系 | `private static ItemStack enchantItem(ItemStack, Holder<Enchantment>)`       | 必须 `static`     |
+| 26.x    | `private ItemStack enchantItem(ItemStack, Holder<Enchantment>, LootContext)` | **不能** `static` |
 
-Mixin 强制要求回调方法与目标方法的 `static` 修饰一致，否则抛：
+Mixin 强制要求回调方法与目标方法的 `static` 修饰一致，否则：
 
 ```
 InvalidInjectionException: non-static callback method ... targets a static method which is not supported
 ```
 
-这条在两边是**相反**的，是本项目跨版本时最容易踩的坑。
+这条在两边是**相反**的，在跨版本时最容易踩坑。
 
 ### 3. `EnchantWithLevelsFunction` 没有 `enchantItem`
 
@@ -56,9 +58,9 @@ InvalidInjectionException: non-static callback method ... targets a static metho
 public ItemStack run(ItemStack, LootContext)   // 实现父类的 protected abstract
 ```
 
-没有 1.21 里的私有辅助方法 `enchantItem`。因此这里用 `@Inject(method = "run", at = @At("RETURN"))`，等函数跑完拿到成品 `ItemStack`，再逐个把附魔等级写成 `getMaxLevel()`。
+没有 1.21 里的方法 `enchantItem`。因此这里用 `@Inject(method = "run", at = @At("RETURN"))`，等函数跑完拿到成品 `ItemStack`，再逐个把附魔等级写成 `getMaxLevel()`。
 
-> 为什么不用 `@ModifyArg` 把 power 改成 30：原版 `enchantItem` 内部还有"等级不超过附魔自身 maxLevel"以及随机降级逻辑，而各附魔 maxLevel 不同（1~5），power=30 并不能保证每个附魔都恰好顶到自己的上限。
+> 若 `@ModifyArg` 把 power 改成 30：原版 `enchantItem` 内部还有"等级不超过附魔自身 maxLevel"以及随机降级逻辑，而各附魔 maxLevel 不同（1~5），power=30 并不能保证每个附魔都恰好顶到自己的上限。
 
 ### 4. 附魔书与装备是两个不同的数据组件
 
@@ -115,21 +117,21 @@ tiny	2	0	official	named
                 -Pcloth_config_version=26.3.159
 ```
 
-该 mod 编译产物：`build/libs/max-level-enchanting-1.0.0.jar`
+编译后：`build/libs/max-level-enchanting-1.0.0.jar`
 
 两个版本共用同一套源码：26.2 与 26.3 的 `EnchantRandomlyFunction` / `EnchantWithLevelsFunction` / `VillagerTrade#getOffer` 签名完全一致。
 
 ### 依赖版本对照
 
-| MC | Fabric API | Cloth Config | Mod Menu |
-|---|---|---|---|
-| 26.2 | `0.161.0+26.2` | `26.2.155` | `20.0.3` |
-| 26.3 | `0.164.0+26.3` | `26.3.159` | `20.0.x` |
+| MC   | Fabric API     | Cloth Config | Mod Menu |
+| ---- | -------------- | ------------ | -------- |
+| 26.2 | `0.161.0+26.2` | `26.2.155`   | `20.0.3` |
+| 26.3 | `0.164.0+26.3` | `26.3.159`   | `20.0.x` |
 
-> Cloth Config 与 Mod Menu 只在编译期需要（`modCompileOnly` / `compileOnly`），运行期由玩家自行安装。若想用本地 jar 离线构建：
+> Cloth Config 与 Mod Menu 只在编译期需要（`modCompileOnly` / `compileOnly`），运行期由玩家自行安装。若想用本地 jar 离线构建：  
 > `./gradlew build -Pcloth_config_local=/path/to/cloth-config.jar -Pmodmenu_local=/path/to/modmenu.jar`
 
-该 mod 会声明对 `minecraft` 的依赖范围为 `~26.2` / `~26.3`（非精确版本），因此同一份 jar 可在两代小版本之间通用。如需手动覆盖：`-Pmc_dep_range="~26.2"`。
+该 mod 会声明对 `minecraft` 的依赖范围为 `~26.2` / `~26.3`，因此同一份 jar 可在两代小版本之间通用。如需手动覆盖：`-Pmc_dep_range="~26.2"`。
 
 ---
 
@@ -167,7 +169,7 @@ tiny	2	0	official	named
 /maxtradeenchant help                          帮助
 ```
 
-需要 GAMEMASTER 权限（旧 OP 等级 2）。服务端控制台天然可用。命令改完立即对全服生效，无需重启。
+游戏内需要 GAMEMASTER 权限（旧 OP 等级 2）。命令改完立即对全服生效，无需重启。
 
 ### 配置文件
 
@@ -193,8 +195,6 @@ src/main/java/com/example/maxenchant/
     ├── EnchantWithLevelsFunctionMixin.java 附魔装备 → 满级（@Inject RETURN）
     └── ZombieVillagerMixin.java            治愈倒计时压缩
 ```
-
-设计上把两个易变 API（`ResourceKey` 命名空间、命令权限）抽成了门面类 `KeyCompat` / `PermissionBridge`，mixin 只依赖 `EnchantMaximizer`，因此将来若要回移到 1.21.x 只需替换门面 + 切换 mixin 目标。
 
 ---
 

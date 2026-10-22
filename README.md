@@ -10,37 +10,39 @@ Currently supports **Minecraft 26.2 / 26.3** (Fabric); support for older version
 
 ## Features
 
-| Feature | Description | Default |
-|---|---|---|
-| Max-level enchanting | Enchanted books, swords/axes/pickaxes/shovels/hoes, armor, bows/crossbows, tridents and fishing rods sold by villagers always carry their enchantments at max level | On |
-| Cure speed-up | A zombie villager being cured (golden apple + Weakness) converts back in the configured number of seconds | On (5s) |
-| Vanilla-only mode | Only enchantments in the `minecraft:` namespace are maxed; custom enchantments from other mods keep their original level | Off |
+| Feature              | Description                                                                                                                                                         | Default |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Max-level enchanting | Enchanted books, swords/axes/pickaxes/shovels/hoes, armor, bows/crossbows, tridents and fishing rods sold by villagers always carry their enchantments at max level | On      |
+| Cure speed-up        | A zombie villager being cured (golden apple + Weakness) converts back in the configured number of seconds                                                           | On (5s) |
+| Vanilla-only mode    | Only enchantments in the `minecraft:` namespace are maxed; custom enchantments from other mods keep their original level                                            | Off     |
 
 ---
 
 ## How villager trade enchanting differs between versions
 
-Today's villager trading system is still the 1.14 overhaul with layer upon layer of patches on top. Comparing the 26.x rewrite of villager trades and enchanting against 1.21, a 1.21-era implementation **fails silently** on 26.x — no crash, no error, the enchantments are simply still random.
+The villager trading system still builds on the 1.14 overhaul.
+
+26.x reworked villager trades and enchanting. Compared with 1.21, a 1.21-era implementation **fails silently** on 26.x — no crash, no error, the enchantments are simply still random.
 
 The notes below are the most reusable part of this repository for anyone porting a villager-trade or enchanting mod to 26.x.
 
 ### 1. Villager trades went back to "data-driven + loot function"
 
-| Version | Trade implementation | Where enchantments come from |
-|---|---|---|
-| 1.21 – 1.21.11 | Hardcoded inner classes `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`, each implementing `getOffer(...)` | `EnchantmentHelper.createBook(...)` / `enchantItem(...)` called directly inside `getOffer` |
-| 26.2 / 26.3 | Inner classes **are gone entirely**. Trades are data-driven: `net.minecraft.world.item.trading.VillagerTrade` holds a `List<LootItemFunction> givenItemModifiers` and applies them in order inside `getOffer(LootContext)` | **Back to loot functions**: enchanted books use `EnchantRandomlyFunction`, enchanted equipment uses `EnchantWithLevelsFunction` |
+| Version        | Trade implementation                                                                                                                                                                                                       | Where enchantments come from                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1.21 – 1.21.11 | Hardcoded inner classes `VillagerTrades$EnchantBookForEmeralds` / `$EnchantedItemForEmeralds`, each implementing `getOffer(...)`                                                                                           | `EnchantmentHelper.createBook(...)` / `enchantItem(...)` called directly inside `getOffer`                                      |
+| 26.2 / 26.3    | Inner classes **are gone entirely**. Trades are data-driven: `net.minecraft.world.item.trading.VillagerTrade` holds a `List<LootItemFunction> givenItemModifiers` and applies them in order inside `getOffer(LootContext)` | **Back to loot functions**: enchanted books use `EnchantRandomlyFunction`, enchanted equipment uses `EnchantWithLevelsFunction` |
 
 > The package moved too: `VillagerTrades` went from `net.minecraft.world.entity.npc[.villager]` to `net.minecraft.world.item.trading`.
 
-**Conclusion**: on 1.21 you must mixin `getOffer` (loot functions never run for villager trades); on 26.x it is the opposite — mixin the loot functions and you are done.
+**Therefore**: on 1.21 you must mixin `getOffer` (loot functions never run for villager trades); on 26.x it is the opposite — mixin the loot functions and you are done.
 
 ### 2. `EnchantRandomlyFunction#enchantItem` changed from static to an instance method
 
-| Version | Signature | Required callback modifier |
-|---|---|---|
-| All of 1.21.x | `private static ItemStack enchantItem(ItemStack, Holder<Enchantment>)` | must be `static` |
-| 26.x | `private ItemStack enchantItem(ItemStack, Holder<Enchantment>, LootContext)` | must **not** be `static` |
+| Version       | Signature                                                                    | Required callback modifier |
+| ------------- | ---------------------------------------------------------------------------- | -------------------------- |
+| All of 1.21.x | `private static ItemStack enchantItem(ItemStack, Holder<Enchantment>)`       | must be `static`           |
+| 26.x          | `private ItemStack enchantItem(ItemStack, Holder<Enchantment>, LootContext)` | must **not** be `static`   |
 
 Mixin requires the callback's `static` modifier to match the target method, otherwise it throws:
 
@@ -48,7 +50,7 @@ Mixin requires the callback's `static` modifier to match the target method, othe
 InvalidInjectionException: non-static callback method ... targets a static method which is not supported
 ```
 
-This flips between the two version lines and is the single easiest trap to fall into when porting.
+This is the opposite on the two version lines, and the easiest trap to fall into when porting.
 
 ### 3. `EnchantWithLevelsFunction` has no `enchantItem`
 
@@ -58,9 +60,9 @@ In 26.x, `EnchantWithLevelsFunction` extends `LootItemConditionalFunction` and e
 public ItemStack run(ItemStack, LootContext)   // implements the parent's protected abstract
 ```
 
-The private `enchantItem` helper from 1.21 does not exist. This mod therefore uses `@Inject(method = "run", at = @At("RETURN"))`: once the function has finished and produced an `ItemStack`, it walks the enchantment components and rewrites every level to `getMaxLevel()`.
+The `enchantItem` method from 1.21 does not exist. This mod therefore uses `@Inject(method = "run", at = @At("RETURN"))`: once the function has finished and produced an `ItemStack`, it walks the enchantment components and rewrites every level to `getMaxLevel()`.
 
-> Why not `@ModifyArg` the power argument to 30? Vanilla's `enchantItem` still clamps the level to each enchantment's own `maxLevel` and may randomly downgrade it, and different enchantments cap out at different levels (1–5). A power of 30 does not guarantee that every enchantment lands exactly on its own maximum.
+> If `@ModifyArg` were used to set the power argument to 30: vanilla's `enchantItem` still clamps the level to each enchantment's own `maxLevel` and may randomly downgrade it, and different enchantments cap out at different levels (1–5). A power of 30 does not guarantee that every enchantment lands exactly on its own maximum.
 
 ### 4. Books and equipment use two different data components
 
@@ -117,21 +119,21 @@ Other environment requirements:
                 -Pcloth_config_version=26.3.159
 ```
 
-Build output: `build/libs/max-level-enchanting-1.0.0.jar`
+After building: `build/libs/max-level-enchanting-1.0.0.jar`
 
 Both versions share a single source tree: `EnchantRandomlyFunction`, `EnchantWithLevelsFunction` and `VillagerTrade#getOffer` have identical signatures in 26.2 and 26.3.
 
 ### Dependency versions
 
-| MC | Fabric API | Cloth Config | Mod Menu |
-|---|---|---|---|
-| 26.2 | `0.161.0+26.2` | `26.2.155` | `20.0.3` |
-| 26.3 | `0.164.0+26.3` | `26.3.159` | `20.0.x` |
+| MC   | Fabric API     | Cloth Config | Mod Menu |
+| ---- | -------------- | ------------ | -------- |
+| 26.2 | `0.161.0+26.2` | `26.2.155`   | `20.0.3` |
+| 26.3 | `0.164.0+26.3` | `26.3.159`   | `20.0.x` |
 
-> Cloth Config and Mod Menu are compile-time only (`modCompileOnly` / `compileOnly`); players supply them at runtime. To build offline against local jars:
+> Cloth Config and Mod Menu are compile-time only (`modCompileOnly` / `compileOnly`); players supply them at runtime. To build offline against local jars:  
 > `./gradlew build -Pcloth_config_local=/path/to/cloth-config.jar -Pmodmenu_local=/path/to/modmenu.jar`
 
-The mod declares `minecraft` as `~26.2` / `~26.3` rather than an exact version, so a single jar works across both patch lines. Override it with `-Pmc_dep_range="~26.2"`.
+The mod declares `minecraft` as `~26.2` / `~26.3`, so a single jar works across both patch lines. Override it with `-Pmc_dep_range="~26.2"`.
 
 ---
 
@@ -169,7 +171,7 @@ Mod Menu → "Villager trades max-level enchanting" → Config. Options:
 /maxtradeenchant help                          help
 ```
 
-Requires GAMEMASTER permission (legacy OP level 2). The server console always has access. Changes apply server-wide immediately, no restart needed.
+In-game this requires GAMEMASTER permission (legacy OP level 2). Changes apply server-wide immediately, no restart needed.
 
 ### Config file
 
@@ -195,8 +197,6 @@ src/main/java/com/example/maxenchant/
     ├── EnchantWithLevelsFunctionMixin.java enchanted equipment → max level (@Inject at RETURN)
     └── ZombieVillagerMixin.java            shorten the cure countdown
 ```
-
-The two volatile APIs (`ResourceKey` namespace access and command permissions) are isolated behind the facades `KeyCompat` / `PermissionBridge`, and the mixins depend only on `EnchantMaximizer`. Backporting to 1.21.x therefore means swapping the facades and retargeting the mixins, nothing else.
 
 ---
 
